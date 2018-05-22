@@ -1,0 +1,65 @@
+table {
+    width: 100%;
+}
+
+div.scroll {
+    /* background-color: #FFFFFF; */
+    height: 250px;
+    overflow: auto;
+	/* overflow-x: hidden; */
+	
+}
+
+div.scroll4 {
+    background-color: #FFFFFF;
+    height: 400px;
+    overflow: auto;
+	
+}
+
+#style-3::-webkit-scrollbar-track
+{
+	-webkit-box-shadow: inset 0 0 8px rgba(0,0,0,0.3);
+	background-color: #F5F5F5;
+}
+
+#style-3::-webkit-scrollbar
+{
+	width: 8px;
+	background-color: #F5F5F5;
+}
+
+#style-3::-webkit-scrollbar:horizontal
+{
+	height: 8px;
+	background-color: #F5F5F5;
+}
+
+#style-3::-webkit-scrollbar-thumb
+{
+	background-color: #A9A9A9;
+}
+
+#style-3::-webkit-scrollbar-thumb:horizontal
+{
+	background-color: #A9A9A9;
+}
+
+
+#a1:link {
+    text-decoration: none;
+}
+
+#a1:visited {
+    text-decoration: none;
+}
+
+#a1:hover {
+    text-decoration: underline;
+}
+
+#a1:active {
+    text-decoration: underline;
+}
+
+

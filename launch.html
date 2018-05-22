@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FHIR Data - Launch</title>
+	<meta http-equiv='X-UA-Compatible' content='IE=edge' />
+    <meta http-equiv='Content-Type' content='text/html; charset=utf-8' />
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="public/w3.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>	
+</head>
+<body>
+<header class="w3-row w3-dark-grey w3-text-light-grey">
+	<div class="w3-container w3-text-shadow">
+		<h4>FHIR Data</h4>		
+	</div>		
+</header>
+<br>
+<div class="w3-small w3-center" id="AuthandTokenErr">Loading...</div>    
+<script>
+
+var serviceUri = getUrlParameter("iss"); 
+var launchContextId = getUrlParameter("launch"); 	
+      
+var clientId = "7f41a293-452e-4733-aa79-9d172074d260"; 		
+var scope = [
+	"launch user/Patient.read user/Condition.read user/Procedure.read user/AllergyIntolerance.read user/MedicationStatement.read user/MedicationAdministration.read user/Observation.read user/DiagnosticReport.read user/Binary.read user/MedicationStatement.write user/AllergyIntolerance.write user/Condition.write"	
+].join(" ");
+			
+var state = Math.round(Math.random()*100000000).toString();		
+var launchUri = window.location.protocol + "//" + window.location.host + window.location.pathname;
+var redirectUri = launchUri.replace("launch.html","index.html");
+var conformanceUri = serviceUri + "/metadata"
+       
+var launchOptions;
+launchOptions = {
+	url: conformanceUri,
+	headers: {
+		'Accept': 'application/json'
+	}
+};
+
+var AuthandTokenError = "";
+
+$.ajax(launchOptions).
+done(function(data, textStatus, jqXHR) {
+	var tokenUri = "";
+	var authUri = "";
+	var conformanceresource = JSON.stringify(data); //cerner returns object, to see it convert it to json string
+	//console.log(conformanceresource);
+	var rest = data.rest;		
+	rest.forEach(function(restdata){
+		var ext = restdata.security.extension;
+		ext.forEach(function(extdata){			
+			if (extdata.url === "http://fhir-registry.smarthealthit.org/StructureDefinition/oauth-uris") {
+				var extension = extdata.extension;
+				extension.forEach(function(extensiondata){							
+					if (extensiondata.url === "token") {
+						tokenUri = extensiondata.valueUri;
+					}
+					if (extensiondata.url === "authorize") {
+						authUri = extensiondata.valueUri;
+					}						
+				})					
+			}
+		})
+	})								  
+		
+	if (authUri && tokenUri){
+		// retain a couple parameters in the session for later use
+		sessionStorage[state] = JSON.stringify({
+			clientId: clientId,
+			serviceUri: serviceUri,
+			redirectUri: redirectUri,
+			tokenUri: tokenUri,
+			authUri: authUri
+		});
+					
+		window.location.href = authUri + "?" +
+			"response_type=code&" +
+               "client_id=" + encodeURIComponent(clientId) + "&" +
+               "scope=" + encodeURIComponent(scope) + "&" +
+               "redirect_uri=" + encodeURIComponent(redirectUri) + "&" +
+               "aud=" + encodeURIComponent(serviceUri) + "&" +
+			   "launch=" + encodeURIComponent(launchContextId) + "&" +
+               "state=" + state;			   
+	}
+	else {
+		console.log("Could not find Auth and/or Token URI");
+		AuthandTokenError = "Could not find Auth and/or Token URI";
+		document.getElementById("AuthandTokenErr").innerHTML = AuthandTokenError;
+	}
+})
+.fail(function(jqXHR, textStatus, errorThrown){		
+	console.log("Auth and Token URI Retrieval Error: " + textStatus + ", STATUS CODE: " + jqXHR.status + ", ERROR THROWN: " + errorThrown);
+	AuthandTokenError = "Auth and Token URI Retrieval Error<br>Error Text: " + textStatus + "<br>Status Code: " + jqXHR.status + "<br>Error Thrown: " + errorThrown;
+	document.getElementById("AuthandTokenErr").innerHTML = AuthandTokenError;
+});			
+		 
+// Convenience function for parsing of URL parameters
+// based on http://www.jquerybyexample.net/2012/06/get-url-parameters-using-jquery.html
+function getUrlParameter(sParam)
+{
+    var sPageURL = window.location.search.substring(1);
+	var sURLVariables = sPageURL.split('&');
+    for (var i = 0; i < sURLVariables.length; i++) 
+        {
+        var sParameterName = sURLVariables[i].split('=');
+        if (sParameterName[0] == sParam) {
+            var res = sParameterName[1].replace(/\+/g, '%20');
+            return decodeURIComponent(res);
+        }
+    }
+}
+</script>
+  
+</body>
+</html>
